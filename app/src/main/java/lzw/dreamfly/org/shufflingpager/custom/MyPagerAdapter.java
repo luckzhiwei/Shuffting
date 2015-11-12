@@ -1,11 +1,14 @@
-package lzw.dreamfly.org.shufflingpager;
+package lzw.dreamfly.org.shufflingpager.custom;
 
 import android.support.v4.view.PagerAdapter;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import java.util.List;
+
+import lzw.dreamfly.org.shufflingpager.R;
 
 /**
  * Created by asus on 2015/11/11.
