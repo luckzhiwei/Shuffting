@@ -11,7 +11,7 @@ import java.util.jar.Attributes;
  */
 public class MyDefineScroller extends Scroller {
 
-       private int mDefinefDuration=2000;
+       private int mDefinefDuration=1500;
 
        public MyDefineScroller(Context context){
            super(context);

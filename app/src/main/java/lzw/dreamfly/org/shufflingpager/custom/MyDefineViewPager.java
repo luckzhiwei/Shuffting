@@ -8,6 +8,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import java.lang.reflect.Field;
@@ -25,18 +26,18 @@ public class MyDefineViewPager extends ViewPager  {
         //向左滑动
         public static final int RIGHT_SCROLL=2;
         //向右滑动
-        public static final int DEAFAULT_TIME=2000;
-        //默认滑动的时间
-        public static final int START_SCROLL=3;
+        public static final int DEAFAULT_TIME=1500;
+        //默认滑动的动画的时间
 
-        public static final int PAUSE_SCROLL=4;
+        private static boolean IS_ON_TOUCH;
 
-        private int currentPageIndex;
-        //当前页面的索引值
         private int currentItemCount;
+       //总共有多少页
+        private int mDirection;
+        //滑动的方向
 
-        private int scrollIndex;
-        //滑动时候的索引的数值
+
+        private ShufftingThread mShufftingThread;
 
         public MyDefineViewPager(Context context){
             super(context);
@@ -50,6 +51,7 @@ public class MyDefineViewPager extends ViewPager  {
 
         private void init(Context context){
             this.myDefineScroller=new MyDefineScroller(context);
+            this.myDefineScroller.setmDefinefDuration(DEAFAULT_TIME);
             try {
                 Field scrollFiled = ViewPager.class.getDeclaredField("mScroller");
                 scrollFiled.setAccessible(true);
@@ -60,48 +62,40 @@ public class MyDefineViewPager extends ViewPager  {
                 e.printStackTrace();
             }
             this.currentItemCount=-1;
-            this.scrollIndex=0;
+            IS_ON_TOUCH=false;
+            this.mDirection=RIGHT_SCROLL;
         }
 
         /**
-         * 设置每次动画的时间
+         * 设置每次滑动动画的时间
          * @param scrollTime
          */
         public void setScrollTime(int scrollTime){
               this.myDefineScroller.setmDefinefDuration(scrollTime);
         }
+
         public void startAutoScroll(int direction){
-              Message msg=Message.obtain(mHandler);
-              msg.arg1=START_SCROLL;
-              msg.arg2=direction;
-              this.mHandler.sendMessageDelayed(msg,3000);
+              if(this.mShufftingThread==null){
+                  this.mShufftingThread=new ShufftingThread(mHandler);
+                  this.mShufftingThread.setmDirection(direction);
+                  this.mShufftingThread.start();
+                  this.mDirection=direction;
+              }
         }
-
-        public void stopAutoScroll(){
-              Message msg=Message.obtain(mHandler);
-              msg.arg1=PAUSE_SCROLL;
-              this.mHandler.sendMessage(msg);
-        }
-
 
 
         private Handler mHandler=new Handler(Looper.getMainLooper()){
             public void handleMessage(Message msg) {
-                if (msg.arg1 == START_SCROLL) {
-                     if(msg.arg2==LEFT_SCROLL){
-                          scrollLeft();
-                          startAutoScroll(LEFT_SCROLL);
-                     }else if(msg.arg2==RIGHT_SCROLL){
-                          scrollRight();
-                          startAutoScroll(RIGHT_SCROLL);
-                     }
-                } else if (msg.arg1 == PAUSE_SCROLL) {
-
+                if(!IS_ON_TOUCH ){
+                    if (msg.arg2 == LEFT_SCROLL) {
+                        scrollLeft();
+                    } else if (msg.arg2 == RIGHT_SCROLL) {
+                        scrollRight();
+                    }
                 }
             }
+
         };
-
-
 
 
         /**
@@ -109,14 +103,14 @@ public class MyDefineViewPager extends ViewPager  {
          */
         private void scrollLeft(){
               int total=ifIitemCountNouCal();
-              this.scrollIndex=(scrollIndex-1)%total;
-              if(this.scrollIndex==-1){
-                   this.scrollIndex=total-1;
-                   this.setCurrentItem(scrollIndex,false);
+              int currentIndex=this.getCurrentItem();
+              currentIndex=(currentIndex-1)%total;
+              if(currentIndex==-1){
+                   currentIndex=total-1;
+                   this.setCurrentItem(currentIndex,false);
               }else{
-                  this.setCurrentItem(scrollIndex,true);
+                  this.setCurrentItem(currentIndex,true);
               }
-
         }
 
         /**
@@ -124,11 +118,12 @@ public class MyDefineViewPager extends ViewPager  {
          */
         private void scrollRight(){
              int total=this.ifIitemCountNouCal();
-             this.scrollIndex=(scrollIndex+1)%total;
-             if(this.scrollIndex==0){
-                   this.setCurrentItem(scrollIndex,false);
+             int currentIndex=this.getCurrentItem();
+             currentIndex=(currentIndex+1)%total;
+             if(currentIndex==0){
+                   this.setCurrentItem(currentIndex,false);
              }else{
-                   this.setCurrentItem(scrollIndex,true);
+                   this.setCurrentItem(currentIndex,true);
              }
         }
 
@@ -142,14 +137,31 @@ public class MyDefineViewPager extends ViewPager  {
               return(this.currentItemCount);
         }
 
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event){
+               switch (event.getAction()){
+                   case MotionEvent.ACTION_DOWN:
+                       if(!IS_ON_TOUCH){
+                           IS_ON_TOUCH=true;
+                       }
+                       break;
+                   case MotionEvent.ACTION_UP:
+                       if(IS_ON_TOUCH){
+                           IS_ON_TOUCH=false;
+                       }
+                       break;
+               }
+               return(super.onTouchEvent(event));
+        }
+
         /**
          * 获取当前页面所在索引值
          * @return
          */
         public int getCurrentPageIndex(){
-              return(this.currentPageIndex);
+              return(this.getCurrentItem());
         }
-
 
 
 
