@@ -43,7 +43,7 @@ public class MainActivity extends Activity {
         MyPagerAdapter myPagerAdapter=new MyPagerAdapter(view);
         myDefineViewPager.setAdapter(myPagerAdapter);
         myDefineViewPager.startAutoScroll(MyDefineViewPager.RIGHT_SCROLL);
-        myDefineViewPager.setScrollTime(2000);
+        myDefineViewPager.setScrollTime(1500);
 
     }
 

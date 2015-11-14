@@ -28,13 +28,10 @@ public class MyDefineViewPager extends ViewPager  {
         //向右滑动
         public static final int DEAFAULT_TIME=1500;
         //默认滑动的动画的时间
-
-        private static boolean IS_ON_TOUCH;
-
+        public static final  int DEFAULT_SHUFFING_ITME=4000;
+        //默认轮播的时间间隔
         private int currentItemCount;
        //总共有多少页
-        private int mDirection;
-        //滑动的方向
 
 
         private ShufftingThread mShufftingThread;
@@ -62,8 +59,6 @@ public class MyDefineViewPager extends ViewPager  {
                 e.printStackTrace();
             }
             this.currentItemCount=-1;
-            IS_ON_TOUCH=false;
-            this.mDirection=RIGHT_SCROLL;
         }
 
         /**
@@ -75,28 +70,29 @@ public class MyDefineViewPager extends ViewPager  {
         }
 
         public void startAutoScroll(int direction){
-              if(this.mShufftingThread==null){
-                  this.mShufftingThread=new ShufftingThread(mHandler);
-                  this.mShufftingThread.setmDirection(direction);
-                  this.mShufftingThread.start();
-                  this.mDirection=direction;
-              }
+              startAutoScroll(direction,DEFAULT_SHUFFING_ITME);
+        }
+
+        public void startAutoScroll(int direction,int shufftingTime){
+            if(this.mShufftingThread==null){
+                this.mShufftingThread=new ShufftingThread(mHandler);
+                this.mShufftingThread.setmDirection(direction);
+                this.mShufftingThread.setMyShufftingTime(shufftingTime);
+                this.mShufftingThread.start();
+            }
         }
 
 
         private Handler mHandler=new Handler(Looper.getMainLooper()){
             public void handleMessage(Message msg) {
-                if(!IS_ON_TOUCH ){
                     if (msg.arg2 == LEFT_SCROLL) {
                         scrollLeft();
                     } else if (msg.arg2 == RIGHT_SCROLL) {
                         scrollRight();
                     }
-                }
             }
 
         };
-
 
         /**
          * 向左滑动
@@ -137,20 +133,25 @@ public class MyDefineViewPager extends ViewPager  {
               return(this.currentItemCount);
         }
 
-
+    /**
+     * 如果有按下和滑动的手势，则告暂停线程
+     * @param event
+     * @return
+     */
         @Override
         public boolean onTouchEvent(MotionEvent event){
                switch (event.getAction()){
                    case MotionEvent.ACTION_DOWN:
-                       if(!IS_ON_TOUCH){
-                           IS_ON_TOUCH=true;
-                       }
+                      if(!mShufftingThread.getIsSupsend()) {
+                          mShufftingThread.setIsSupsend(true);
+                      }
                        break;
                    case MotionEvent.ACTION_UP:
-                       if(IS_ON_TOUCH){
-                           IS_ON_TOUCH=false;
-                       }
+                       mShufftingThread.setIsSupsend(false);
                        break;
+                   case MotionEvent.ACTION_MOVE:
+                      mShufftingThread.setIsSupsend(true);
+                      break;
                }
                return(super.onTouchEvent(event));
         }
